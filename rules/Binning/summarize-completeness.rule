@@ -1,0 +1,9 @@
+rule binning_summarize_completeness:
+    input:
+        "{ts_sample}/Binning/split_completeness.done"
+    output:
+        "{ts_sample}/Binning/CompletenessSummary.csv"
+    shell:
+        """
+        {SRCDIR}/getCompletenessAnalysisOverview.sh {wildcards.ts_sample}/Binning/clusterFiles {output} 
+        """

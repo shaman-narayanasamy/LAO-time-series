@@ -1,0 +1,39 @@
+rule run_metaquast_bin:
+    input:
+       "%s/{bin}.fa" % BINS_DIR
+    output:
+        "MetaQuast/Bins/{bin}/summary/report.html"
+    shell:
+        """
+        mkdir -p MetaQuast/Bins/{wildcards.bin}
+
+        METAQUAST="/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/quast/metaquast.py"
+        python2 $METAQUAST -t {THREADS} -o MetaQuast/Bins/{wildcards.bin} {input[0]} --max-ref-number {config[metaquast][max_genomes]}
+        FFILE="MetaQuast/Bins/{wildcards.bin}/combined_quast_output/contigs_reports/nucmer_output/aux/contigs.coords"
+
+        if [ -f $FFILE ];then
+        sed -e 's/|//g' $FFILE | sed -e 's/*\s/\t/g' | tail -n +3 > {output}
+        else
+        touch {output}
+        fi
+        """
+
+rule run_metaquast_isolate:
+    input:
+       "%s/{isolate}.fa" % ISOLATES_DIR
+    output:
+        "MetaQuast/Isolates/{isolate}/summary/report.html"
+    shell:
+        """
+        mkdir -p MetaQuast/Isolates/{wildcards.isolate}
+
+        METAQUAST="/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/quast/metaquast.py"
+        python2 $METAQUAST -t {THREADS} -o MetaQuast/Isolates/{wildcards.isolate} {input[0]} --max-ref-number {config[metaquast][max_genomes]}
+        FFILE="MetaQuast/Isolates/{wildcards.isolate}/combined_quast_output/contigs_reports/nucmer_output/aux/contigs.coords"
+
+        if [ -f $FFILE ];then
+        sed -e 's/|//g' $FFILE | sed -e 's/*\s/\t/g' | tail -n +3 > {output}
+        else
+        touch {output}
+        fi
+        """

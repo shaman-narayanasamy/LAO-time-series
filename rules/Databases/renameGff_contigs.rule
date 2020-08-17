@@ -1,0 +1,22 @@
+rule rename_gffNames:
+    input:
+        "Assemblies/ContigNames/{ts_sample}-old2newContigMappings.tsv",
+        "%s/{ts_sample}/Analysis/annotation/annotation.filt.gff" % TS_DIR
+    output:
+        "Annotations/{ts_sample}-mgmt.assembly.merged.gff"
+    shell:
+        """
+        mkdir -p Annotations
+        awk  'FNR==NR{{a[$1]=$2;next}}{{print a[$1],$0}}' FS='\t' OFS='\t' {input[0]} {input[1]} | cut -f1,3-10 > {output[0]}
+        """
+
+rule concatenate_gffFiles:
+    input:
+        expand("Annotations/{ts_sample}-mgmt.assembly.merged.gff", ts_sample=TS_SAMPLES)
+    output:
+        "Annotations/ALL-mgmt.assembly.merged.gff"
+    shell:
+        """
+        mkdir -p Annotations
+        cat {input} > {output}
+        """

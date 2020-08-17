@@ -1,0 +1,35 @@
+rule read_mapping:
+    input:
+        '%s/{ts_sample}/Preprocessing/{type}.r1.preprocessed.fq' % TS_DIR,
+        '%s/{ts_sample}/Preprocessing/{type}.r2.preprocessed.fq' % TS_DIR,
+        '%s/{ts_sample}/Preprocessing/{type}.se.preprocessed.fq' % TS_DIR,
+        "Index/ALL_representative_genomes.fa",
+        "Index/ALL_representative_genomes.fa.amb",
+        "Index/ALL_representative_genomes.fa.bwt",
+        "Index/ALL_representative_genomes.fa.pac",
+        "Index/ALL_representative_genomes.fa.ann",
+        "Index/ALL_representative_genomes.fa.sa"
+    output:
+        'Mappings/{ts_sample}.{type}.reads.sorted.bam',
+        'Mappings/{ts_sample}.{type}.reads.sorted.bam.bai'
+    shell:
+        """
+        mkdir -p Mappings
+
+        SAMHEADER="@RG\\tID:{wildcards.ts_sample}\\tSM:{wildcards.type}"
+        PREFIX=Mappings/{wildcards.ts_sample}.{wildcards.type}.reads
+
+        # merge paired and se
+        samtools merge -@ {THREADS} -f $PREFIX.merged.bam \
+        <(bwa mem -v 1 -t {THREADS} -M -R \"$SAMHEADER\" {input[3]} {input[0]} {input[1]} | \
+        samtools view -@ {THREADS} -bS -) \
+        <(bwa mem -v 1 -t {THREADS} -M -R \"$SAMHEADER\" {input[3]} {input[2]} | \
+        samtools view -@ {THREADS} -bS -)
+        # sort
+        samtools sort -@ {THREADS} -m {MEMCORE}G $PREFIX.merged.bam $PREFIX.sorted
+        rm $PREFIX.merged.bam
+        # index
+        samtools index $PREFIX.sorted.bam
+        """
+
+

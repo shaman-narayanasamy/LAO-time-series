@@ -1,0 +1,79 @@
+{
+    "threads": 12,
+    "memory_total_gb": 48,
+    "memory_per_core_gb": 4,
+    "tmp_dir": "tmp",
+    "imp_src": "src",
+    "raws": {
+      "Metagenomics": "",
+      "Metatranscriptomics": ""
+    },
+    "sample": "test",
+    "outputdir": "/output",
+    "db_path": "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db",
+    "preprocessing_filtering": true,
+    "assembler": "idba",
+    "trimmomatic": {
+        "adapter": "TruSeq2",
+        "leading": 20,
+        "minlen": 40,
+        "palindrome_clip_threshold": 30,
+        "simple_clip_threshold": 10,
+        "trailing": 20,
+        "seed_mismatch": 2,
+        "window_size": 1,
+        "window_quality": 3,
+        "strictness": 0.5,
+        "target_length": 40,
+        "jarfile": "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/trimmomatic-0.32/dist/jar/trimmomatic-0.32.jar"
+    },
+    "idba_ud": {
+        "mink": 25,
+        "maxk": 99,
+        "step": 4,
+        "perid": 0.98
+    },
+    "vizbin": {
+        "dimension": 50,
+        "kmer": 5,
+        "size": 4,
+        "theta": 0.5,
+        "perp": 30,
+        "cutoff": 1000,
+        "jarfile": "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/VizBin_R3/VizBin-dist.jar"
+    },
+    "human_filtering": {
+        "filter": "hg38",
+        "url": "http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"
+    },
+    "sortmerna": {
+        "scripts_path": "/mnt/nfs/projects/ecosystem_biology/local_tools/sortmerna-1.99-beta/scripts",
+
+        "files": [
+            "rfam-5.8s-database-id98",
+            "silva-arc-16s-id95",
+            "silva-bac-16s-id90",
+            "silva-euk-18s-id95",
+            "rfam-5s-database-id98",
+            "silva-arc-23s-id98",
+            "silva-bac-23s-id98",
+            "silva-euk-28s-id98"
+        ]
+    },
+    "prokka": {
+        "databases": [
+            "cm/Bacteria.i1i",
+            "genus/Staphylococcus.phr",
+            "hmm/CLUSTERS.hmm.h3f",
+            "kingdom/Archaea/sprot.phr"
+        ]
+    },
+    "kegg": {
+        "db_ec2pthy": "http://rest.kegg.jp/link/ec/pathway",
+        "db_hierarchy": "http://rest.kegg.jp/list/pathway"
+    },
+    "binning": {
+        "pk": 10,
+        "nn": 4
+    }
+}

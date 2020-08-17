@@ -1,0 +1,28 @@
+rule rename_bins:
+    input:
+        expand("{ts_dir}/{ts_sample}/Binning/contigs2clusters.{pk}.{nn}.tsv", ts_dir=TS_DIR, ts_sample=TS_SAMPLES, pk=config["binning"]["pk"], nn=config["binning"]["nn"])
+    output:
+        "bin_renaming.done"
+    shell:
+        """
+#        mkdir -p AllBins
+#
+#        \ls -d {TS_DIR}/[AD]*/Binning/clusterFiles/[PGOL]* | \
+#        parallel 'str={{}}; sample=$(echo ${{str}} | \
+#        cut -d '/' -f 6); bin=$(echo ${{str}} | cut -d '/' -f 9); \
+#        sed -e "s/>contig/>${{sample}}_${{bin}}_contig/g" "${{str}}/cluster.${{bin}}.fa" > "AllBins/${{sample}}_${{bin}}.fa" '
+
+        touch {output}
+        """
+
+rule get_isolates:
+    input:
+        "%s/{genome}/Assembly_2017/Assembly/contigs.fasta" % GENOMES_DIR
+    output:
+        "AllBins/{genome}.fa"
+    shell:
+        """
+#        echo "Soft linking bins"
+#        ln -fs {input} AllBins/{wildcards.genome}.fa
+        """
+

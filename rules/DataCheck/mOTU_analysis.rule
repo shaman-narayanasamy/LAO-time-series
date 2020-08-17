@@ -1,0 +1,14 @@
+rule mOTU_analysis:
+    input:
+        '%s/{ts_sample}/Preprocessing/{type}.r1.preprocessed.fq' % TS_DIR,
+        '%s/{ts_sample}/Preprocessing/{type}.r2.preprocessed.fq' % TS_DIR
+    output:
+        'mOTU/{ts_sample}/{type}/',
+        'mOTU/{ts_sample}/{type}/annotated.mOTU.abundances.gz',
+        'mOTU/{ts_sample}/{type}/mOTU.abundances.gz',
+        'mOTU/{ts_sample}/{type}/NCBI.species.abundances.gz'
+    shell:
+        """
+        mkdir -p {output[0]}
+        mOTUs.pl --processors={THREADS} {input[0]} {input[1]} --output-directory={output[0]}
+        """

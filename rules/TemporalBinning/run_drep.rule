@@ -1,0 +1,23 @@
+rule run_drep:
+    input:
+        "bin_renaming.done"
+    output:
+        "dRep.done"
+    shell:
+        """
+#        echo "Create working directory"
+#        mkdir -p RepresentativeBins
+#  
+#        echo "Run dRep"
+#        dRep dereplicate_wf \
+#        RepresentativeBins \
+#        -p {THREADS} \
+#        --completeness {config[dRep][completeness]} \
+#        --strain_htr {config[dRep][strain_htr]} \
+#        --P_ani {config[dRep][P_ani]} \
+#        --S_ani {config[dRep][S_ani]} \
+#        --overwrite \
+#        -g AllBins/*.fa
+  
+        touch dRep.done
+        """

@@ -1,0 +1,10 @@
+rule run_feature_count:
+    input:
+        "Index/ALL_representative_genomes.gff",
+        "Mappings/{ts_sample}.{type}.reads.sorted.bam"
+    output:
+        "Calculations/GeneLevel/{ts_sample}.{type}.annotation.featureCounts.txt",
+    shell:
+        """
+        featureCounts -p -O -t CDS -g ID -o {output} -a {input[0]} -T {THREADS} {input[1]}
+        """

@@ -1,0 +1,15 @@
+rule index_fasta:
+    input:
+        "Index/ALL_representative_genomes.fa"
+    output:
+        "Index/ALL_representative_genomes.fa.amb",
+        "Index/ALL_representative_genomes.fa.bwt",
+        "Index/ALL_representative_genomes.fa.pac",
+        "Index/ALL_representative_genomes.fa.ann",
+        "Index/ALL_representative_genomes.fa.sa"
+    shell:
+        """
+        bwa index {input}
+        """
+
+

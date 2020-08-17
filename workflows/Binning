@@ -1,0 +1,71 @@
+import subprocess
+
+PWD = os.getcwd()
+
+INPUTDIR = os.environ.get("INPUTDIR")
+OUTPUTDIR = os.environ.get("OUTPUTDIR")
+TMPDIR = os.environ.get("TMPDIR", "/tmp")
+SAMPLE = os.environ.get("SAMPLE")
+SRCDIR = os.environ.get("SRCDIR", "%s/src" % PWD)
+CONFIG = os.environ.get("CONFIG", "conf/config_normalNode.json")
+DBPATH = os.environ.get("DBPATH", "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db")
+
+## Define configurations
+configfile: CONFIG
+
+MEMCORE = os.environ.get("MEMCORE", config['memory_per_core_gb'])
+THREADS = os.environ.get("THREADS", config['threads'])
+MEMTOTAL = os.environ.get("MEMTOTAL", config['memory_total_gb'])
+
+## Define input directories
+#TS_DIR = os.environ.get("TS_DIR", "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3")
+TS_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3"
+
+## Define samples
+TS_SAMPLES = ['A01', 'A02', 'D32', 'D36', 'D49']
+
+## Define output directory
+OUTDIR = os.environ.get("OUTDIR", "/work/users/smartinezarbas/Malte_pipeline_test")
+
+workdir:
+    OUTDIR
+
+include:
+    '../rules/Binning/find-essential-genes.rule'
+
+include:
+    '../rules/Binning/binning.rule'
+
+include:
+    '../rules/Binning/separate-bins.rule'
+
+include:
+    '../rules/Binning/split-completeness.rule'
+
+include:
+    '../rules/Binning/summarize-completeness.rule'
+
+#include:
+#    '../rules/Binning/plot-completeness.rule'
+
+include:
+    '../rules/Binning/essential-gene_info.rule'
+
+include:
+    '../rules/Binning/extract-essential-genes.rule'
+
+# master command
+rule BINNING:
+    input:
+        expand("{ts_sample}/Binning/ORFS.hmmer.essential.out", ts_sample = TS_SAMPLES),
+        expand("{ts_sample}/Binning/contigs2clusters.{pk}.{nn}.tsv", ts_sample = TS_SAMPLES, pk = config["binning"]["pk"], nn = config["binning"]["nn"]),
+        expand("{ts_sample}/Binning/separate_bins.done", ts_sample = TS_SAMPLES),
+        expand("{ts_sample}/Binning/essMarkerGenes/markersAll.tsv", ts_sample = TS_SAMPLES),
+        expand("{ts_sample}/Binning/getMarkerGenes.done", ts_sample = TS_SAMPLES),
+        expand("{ts_sample}/Binning/separate_bins.done", ts_sample = TS_SAMPLES),
+        expand("{ts_sample}/Binning/CompletenessSummary.csv", ts_sample = TS_SAMPLES),
+        #expand("{ts_sample}/Binning/analysis_essential_genes.pdf", ts_sample = TS_SAMPLES),
+
+    output:
+        touch('workflow_binning.done') 
+

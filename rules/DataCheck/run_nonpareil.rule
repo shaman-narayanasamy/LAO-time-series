@@ -1,0 +1,14 @@
+rule run_nonpareil:
+    input:
+        '%s/{ts_sample}/Preprocessing/{type}.r1.preprocessed.fq' % TS_DIR,
+    output:
+        "Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npo",
+        "Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npc",
+        "Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npl",
+        "Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npa"
+    shell:
+       """
+       OUTNAME=`echo {output[0]} | sed -e 's/.npo//g'`
+       nonpareil -s {input} -T kmer -X {config[nonpareil][read_samples]} -n {THREADS} \
+       -R 4194303 -f fastq -b ${{OUTNAME}} -t {THREADS}
+       """

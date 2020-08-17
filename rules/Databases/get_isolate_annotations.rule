@@ -1,0 +1,15 @@
+rule get_isolate_annotations:
+    input:
+        "%s/{isolate}.fa" % ISOLATES_DIR
+    output:
+        'Annotations/Isolates/{isolate}.gff'
+    shell:
+       """
+       mkdir -p Annotations/Isolates
+       
+       cat {GENOMES_DIR}/{wildcards.isolate}/Assembly_2017/Analysis/annotation/prokka.gff | \
+       grep -v "^#" | \
+       sed -e "/^>/,$ d" | \
+       sed -e "s/^NODE/{wildcards.isolate}|NODE/g" | \
+       sed -e "s/ID=/ID={wildcards.isolate}|/g" > {output}
+       """

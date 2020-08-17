@@ -1,0 +1,63 @@
+rule per_bin_renamed_faas:
+    input:
+        "%s/{ts_sample}/Binning/clusterFiles/" % TS_DIR,
+    output:
+        "Protein_DBS/per_bin_faas/{ts_sample}/per_bin_faas.done"
+    shell:
+        """
+        \ls -d {input[0]}/*/ | grep -v "checkM_input" | \
+        parallel 'bin={{/}}; sample=$(echo {input[0]} | cut -d '/' -f 2); \
+        sed -e "s/>/>{wildcards.ts_sample}_${{bin}}_/g" {input[0]}/${{bin}}/cluster.${{bin}}.faa > Protein_DBS/per_bin_faas/{wildcards.ts_sample}/{wildcards.ts_sample}_${{bin}}.faa'
+
+        touch {output}
+        """
+
+rule per_sample_binned_faas:
+    input:
+        "Protein_DBS/per_bin_faas/{ts_sample}/per_bin_faas.done",
+    output:
+        #"Protein_DBS/per_sample_binned_faas/{ts_sample}.per_sample_binned_faas.done",
+        "Protein_DBS/per_sample_binned_faas/{ts_sample}.binned.faa",
+    shell:
+        """
+        cat Protein_DBS/per_bin_faas/{wildcards.ts_sample}/*.faa > Protein_DBS/per_sample_binned_faas/{wildcards.ts_sample}.binned.faa
+        
+        #touch {output[0]}        
+        """ 
+
+rule per_sample_unbinned_faas:
+    input:
+        "Protein_DBS/per_sample_binned_faas/{ts_sample}.binned.faa"
+    output:
+        "Protein_DBS/per_sample_unbinned_faas/{ts_sample}.unbinned.faa"
+    shell:
+        """
+        grep "^>" {input[0]} | cut -d "_" -f 3,4 | cut -d " " -f1 | pullseq -N -v -e -i /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/{wildcards.ts_sample}/Analysis/annotation/prokka.faa > {output}
+        a=$(grep -c ">" /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/{wildcards.ts_sample}/Analysis/annotation/prokka.faa)
+        b=$(grep -c ">" {input})
+        c=$(grep -c ">" {output})
+        declare -i a
+        declare -i b
+        declare -i c
+        if [ a==c+b ]
+        then
+            echo "happy for {wildcards.ts_sample}"
+        fi
+        if [ ! a==b+c ] 
+        then
+            echo "unhappy for $a=$b+$c {wildcards.ts_sample}"
+            exit
+        fi
+        sed -i "s/>/>{wildcards.ts_sample}_S_/g" {output}
+        """
+        
+rule per_sample_faas:
+    input:
+        "Protein_DBS/per_sample_unbinned_faas/{ts_sample}.unbinned.faa",
+        "Protein_DBS/per_sample_binned_faas/{ts_sample}.binned.faa"
+    output:
+        "Protein_DBS/per_sample_faas/{ts_sample}.faa"
+    shell:
+        """
+        cat {input[1]} {input[0]} > {output}
+        """

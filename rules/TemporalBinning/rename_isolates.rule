@@ -1,0 +1,16 @@
+rule rename_isolates:
+    input:
+        expand("{ts_dir}/{ts_sample}/Binning/contigs2clusters.{pk}.{nn}.tsv", ts_dir=TS_DIR, ts_sample=TS_SAMPLES, pk=config["binning"]["pk"], nn=config["binning"]["nn"])
+    output:
+        "isolate_renaming.done"
+    shell:
+        """
+#        mkdir -p RenamedIsolates
+#
+#        \ls RepresentativeBins/dereplicated_genomes/ | \
+#        grep Isolate_* | parallel 'str={{}}; isolate=$(echo ${{str}} | sed -e "s:.fa::g"); \
+#        sed -e "s/>/>${{isolate}}|/g" "RepresentativeBins/dereplicated_genomes/${{str}}" > "RenamedIsolates/${{isolate}}.fa" '
+#
+        touch {output}
+        """
+

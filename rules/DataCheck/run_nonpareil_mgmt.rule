@@ -1,0 +1,18 @@
+rule run_nonpareil_mgmt:
+    input:
+        '%s/{ts_sample}/Preprocessing/mg.r1.preprocessed.fq' % TS_DIR,
+        '%s/{ts_sample}/Preprocessing/mt.r1.preprocessed.fq' % TS_DIR
+    output:
+        "Nonpareil/{ts_sample}/mgmt.r1.preprocessed.fq",
+        "Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npo",
+        "Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npc",
+        "Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npl",
+        "Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npa"
+    shell:
+       """
+       cat {input[0]} {input[1]} > {output[0]}
+       
+       OUTNAME=`echo {output[1]} | sed -e 's/.npo//g'`
+       nonpareil -s {output[0]} -T kmer -X {config[nonpareil][read_samples]} -n {THREADS} \
+       -R 4194303 -f fastq -b ${{OUTNAME}} -t {THREADS}
+       """

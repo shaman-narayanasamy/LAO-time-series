@@ -1,0 +1,27 @@
+rule get_protein_sequences:
+    input:
+        "FinalRepresentatives.done"
+    output:
+        "FinalRepresentatives/ProteinDatabases/FinalRepresentatives_protein_DB.done"
+    shell:
+        """
+        pwd
+        mkdir -p FinalRepresentatives/ProteinDatabases
+
+        for BIN in `\ls FinalRepresentatives/ | grep ".fa" | grep -v Isolate | sed -e 's/.fa//g'`
+        do 
+             TP=`echo $BIN | cut -f1 -d "_"`
+             ln -fs {DATABASE_DIR}/Protein_DBS/per_bin_faas/$TP/$BIN.faa FinalRepresentatives/ProteinDatabases/
+        done
+        touch {output}
+        """
+
+rule concatenate_protein_sequences:
+    input:
+        "FinalRepresentatives/ProteinDatabases/FinalRepresentatives_protein_DB.done"
+    output:
+        "FinalRepresentatives/ProteinDatabases/FinalRepresentatives_protein_DB.faa"
+    shell:
+        """
+        cat FinalRepresentatives/ProteinDatabases/*.faa > {output}
+        """ 

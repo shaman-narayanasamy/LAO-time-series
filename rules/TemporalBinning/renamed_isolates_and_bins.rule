@@ -1,0 +1,17 @@
+rule renamed_isolates_and_bins:
+    input:
+        "isolate_renaming.done",
+        "bin_renaming.done",
+        "dRep.done"
+    output:
+        "FinalRepresentatives.done"
+    shell:
+        """
+#        pwd
+#        mkdir -p FinalRepresentatives
+#
+#        ls RepresentativeBins/dereplicated_genomes/ | grep -v ^Isolate | xargs -I{{}} ln -fs RepresentativeBins/dereplicated_genomes/{{}} FinalRepresentatives/
+#        ln -fs RenamedIsolates/*.fa FinalRepresentatives/
+
+        touch {output}
+        """

@@ -1,0 +1,21 @@
+rule get_gc_content_bin:
+    input:
+        "%s/{bin}.fa" % BINS_DIR
+    output:
+        "Calculations/PopulationLevel/Bins/{bin}_gc.txt"
+    shell:
+        """
+        mkdir -p Calculations/PopulationLevel/Bins
+        {SRCDIR}/get_gc_content.pl {input} {output}
+        """
+
+rule get_gc_content_isolate:
+    input:
+        "%s/{isolate}.fa" % ISOLATES_DIR
+    output:
+        "Calculations/PopulationLevel/Isolates/{isolate}_gc.txt"
+    shell:
+        """
+        mkdir -p Calculations/PopulationLevel/Isolates
+        {SRCDIR}/get_gc_content.pl {input} {output}
+        """

@@ -1,0 +1,10 @@
+rule get_isolate_proteins:
+    input:
+        "%s/{isolate}.fa" % ISOLATES_DIR
+    output:
+        "Protein_DBS/Isolates/{isolate}_proteins.faa"
+    shell:
+        """
+        mkdir -p Protein_DBS/Isolates
+        cat {GENOMES_DIR}/{wildcards.isolate}/Assembly_2017/Analysis/annotation/prokka.faa | sed -e 's/>/>{wildcards.isolate}|/g' > {output}
+        """

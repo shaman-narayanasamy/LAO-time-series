@@ -1,0 +1,109 @@
+import subprocess
+
+PWD = os.getcwd()
+
+INPUTDIR = os.environ.get("INPUTDIR")
+OUTPUTDIR = os.environ.get("OUTPUTDIR")
+TMPDIR = os.environ.get("TMPDIR", "/tmp")
+SAMPLE = os.environ.get("SAMPLE")
+SRCDIR = os.environ.get("SRCDIR", "%s/src" % PWD)
+CONFIG = os.environ.get("CONFIG", "conf/config_bigmem183.json")
+DBPATH = os.environ.get("DBPATH", "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db")
+
+## Define configurations
+configfile: CONFIG
+
+MEMCORE = os.environ.get("MEMCORE", config['memory_per_core_gb'])
+THREADS = os.environ.get("THREADS", config['threads'])
+MEMTOTAL = os.environ.get("MEMTOTAL", config['memory_total_gb'])
+
+## Define input directories
+TS_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS"
+BINS_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes"
+ISOLATES_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates"
+DATABASES = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/Databases"
+
+## Define samples
+TS_SAMPLES = ['D06_2', 'D07_2', 'D14_2', 'D28_2', 'D39_2', 'D45_2', 'D49_2']
+
+## Define types of reads (MG/MT)
+TYPES = [ "mg", "mt" ]
+
+## Define bins and isolate genomes
+BINS = subprocess.check_output("ls /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes/*.fa | grep -v 'Isolate_' | sed -e 's:/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes/::g' | sed -e 's:.fa::g'", shell = True)
+BINS = [m.decode('utf-8') for m in BINS.split()]
+
+ISOLATES = subprocess.check_output("ls /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates | sed -e 's:/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates::g' | sed -e 's:.fa::g'", shell = True)
+ISOLATES = [m.decode('utf-8') for m in ISOLATES.split()]
+
+## Define output directory
+OUTDIR = os.environ.get("OUTDIR", "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS/PopulationAnalysis_2")
+
+workdir:
+    OUTDIR
+
+include:
+    '../rules/PopulationAnalysis/pool_all_genomes.rule'
+
+include:
+    '../rules/PopulationAnalysis/pool_all_annotations.rule'
+
+include:
+    '../rules/PopulationAnalysis/run_bwa_index.rule'
+
+include:
+    '../rules/PopulationAnalysis/run_bwa.rule'
+
+include:
+    '../rules/PopulationAnalysis/run_bedtools_contig.rule'
+
+include:
+    '../rules/PopulationAnalysis/run_bedtools_gene.rule'
+
+include:
+    '../rules/PopulationAnalysis/run_feature_count.rule'
+
+include:
+    '../rules/PopulationAnalysis/get_gc_content.rule'
+
+include:
+    '../rules/PopulationAnalysis/get_genome_length.rule'
+
+#include:
+#    '../rules/PopulationAnalysis/run_metaquast.rule'
+
+# master command
+rule POPULATION_ANALYSIS:
+    input:
+        "Index/ALL_representative_genomes.fa",
+        "Index/ALL_representative_genomes.fa.amb",
+        "Index/ALL_representative_genomes.fa.bwt",
+        "Index/ALL_representative_genomes.fa.pac",
+        "Index/ALL_representative_genomes.fa.ann",
+        "Index/ALL_representative_genomes.fa.sa",
+        "Index/ALL_representative_genomes.gff",
+        expand("Mappings/{ts_sample}.{type}.reads.sorted.bam", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Mappings/{ts_sample}.{type}.reads.sorted.bam.bai", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/ContigLevel/{ts_sample}.{type}.contig_coverage.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/ContigLevel/{ts_sample}.{type}.contig_depth.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/ContigLevel/{ts_sample}.{type}.contig_flagstat.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/GeneLevel/{ts_sample}.{type}.annotation.bed.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/GeneLevel/{ts_sample}.{type}.gene_depth_hist.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/GeneLevel/{ts_sample}.{type}.gene_depth_avg.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/GeneLevel/{ts_sample}.{type}.gene_len.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/GeneLevel/{ts_sample}.{type}.annotation.featureCounts.txt", ts_sample=TS_SAMPLES, type=TYPES),
+        expand("Calculations/PopulationLevel/Bins/{bin}_gc.txt", bin=BINS),
+        expand("Calculations/PopulationLevel/Isolates/{isolate}_gc.txt", isolate=ISOLATES),
+        expand("Calculations/PopulationLevel/Bins/{bin}_length.txt", bin=BINS),
+        expand("Calculations/PopulationLevel/Isolates/{isolate}_length.txt", isolate=ISOLATES),
+#        expand("MetaQuast/Bins/{bin}/summary/report.html", bin=BINS),
+#        expand("MetaQuast/Isolates/{isolate}/summary/report.html", isolate=ISOLATES)
+    output:
+        expand("DoneFiles/{ts_sample}.done", ts_sample=TS_SAMPLES),
+        expand("DoneFiles/Bins/{bin}.done", bin=BINS),
+        expand("DoneFiles/Isolates/{isolate}.done", isolate=ISOLATES)
+    shell:
+        """
+        mkdir -p DoneFiles
+        touch {output}
+        """

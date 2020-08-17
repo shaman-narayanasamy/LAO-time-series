@@ -1,0 +1,39 @@
+rule merge_contig_info:
+    input:
+        "%s/{ts_sample}/Assembly/mgmt.assembly.merged.fa" % TS_DIR,
+        "%s/{ts_sample}/Binning/contigs2clusters.10.4.tsv" % TS_DIR
+    output:
+        "Assemblies/ContigNames/{ts_sample}-old2newContigMappings.tsv"
+    shell:
+        """
+        mkdir -p Assemblies/ContigNames
+        paste <(grep "^>" {input[0]} | sed -e "s/>//") <(join -a1 -a2 -1 1 -2 1 -o 2.2 0 -e S <(grep "^>" {input[0]} | sed -e 's/>//' | sort) <(tail -n +2 {input[1]}) | sed -e 's/ /\t/g' | sed -e 's/^/{wildcards.ts_sample}\t/' | sort -k3 --version-sort) > {output[0]}.tmp
+        paste <(cut -f1 {output[0]}.tmp) <(cut -f 2,3,4 {output[0]}.tmp | sed -e 's/\t/_/g') > {output}
+        rm -rf {output[0]}.tmp
+        """
+
+rule rename_contigs:
+    input:
+        "Assemblies/ContigNames/{ts_sample}-old2newContigMappings.tsv",
+        "%s/{ts_sample}/Assembly/mgmt.assembly.merged.fa" % TS_DIR
+    output:
+        "Assemblies/{ts_sample}-mgmt.assembly.merged.fa"
+    shell:
+        """
+        awk 'FNR==NR{{
+        a[">"$1]=$2;next
+        }}
+        $1 in a{{
+          sub(/>/,">"a[$1]"|",$1)
+        }}1' {input[0]} {input[1]} | sed -e "s/|.*$//" > {output}
+        """
+
+rule concatenate_contigs:
+    input:
+        expand("Assemblies/{ts_sample}-mgmt.assembly.merged.fa", ts_sample=TS_SAMPLES)
+    output:
+        "Assemblies/ALL-mgmt.assembly.merged.fa"
+    shell:
+        """
+        cat {input} > {output}
+        """

@@ -1,0 +1,13 @@
+.snakemake/
+OAR*
+*~
+oarlogs/*
+*.XXX.bed
+*.XXX.hmmer.essential.out
+*.XXX.renamed.faa
+conf/*~
+.Rproj.user
+.Rhistory
+Reporting/Population/.Rproj.user
+Reporting/Population/*.Rproj
+Reporting/Population/*.html

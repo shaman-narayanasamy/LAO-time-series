@@ -1,0 +1,8 @@
+rule get_no_of_bins.rule
+    input:
+        "%s/{ts_sample}/" % TS_DIR,
+    output:
+    shell:
+        """
+        ls | grep -v .tsv | grep -v checkM_input | cut -f1 -d '.' | sed -e "s/[0-9]//g" | uniq -c
+        """

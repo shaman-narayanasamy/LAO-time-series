@@ -1,0 +1,74 @@
+import subprocess
+
+INPUTDIR = os.environ.get("INPUTDIR")
+OUTPUTDIR = os.environ.get("OUTPUTDIR")
+TMPDIR = os.environ.get("TMPDIR", "/tmp")
+SAMPLE = os.environ.get("SAMPLE")
+SRCDIR = os.environ.get("SRCDIR", "../src")
+CONFIG = os.environ.get("CONFIG", "conf/config_normalNode.json")
+DBPATH = os.environ.get("DBPATH", "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db")
+
+## Define configurations
+configfile: CONFIG
+
+MEMCORE = os.environ.get("MEMCORE", config['memory_per_core_gb'])
+THREADS = os.environ.get("THREADS", config['threads'])
+MEMTOTAL = os.environ.get("MEMTOTAL", config['memory_total_gb'])
+
+## Define input directories
+TS_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS"
+BINS_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes"
+ISOLATES_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates"
+GENOMES_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/Genomes"
+
+## Define samples
+TS_SAMPLES = ['A01', 'A02', 'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12', 'D13', 'D14', 'D15', 'D16', 'D17', 'D18', 'D19', 'D20', 'D21', 'D22', 'D23', 'D24', 'D25', 'D26', 'D27', 'D28', 'D29', 'D30', 'D31', 'D32', 'D33', 'D34', 'D35', 'D36', 'D37', 'D38', 'D39', 'D40', 'D41', 'D42', 'D43', 'D44', 'D45', 'D46', 'D47', 'D48', 'D49', 'D50', 'D51']
+
+## Define bins and isolate genomes
+BINS = subprocess.check_output("ls /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes/*.fa | grep -v 'Isolate_' | sed -e 's:/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RepresentativeBins/dereplicated_genomes/::g' | sed -e 's:.fa::g'", shell = True)
+BINS = [m.decode('utf-8') for m in BINS.split()]
+
+ISOLATES = subprocess.check_output("ls /scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates | sed -e 's:/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3/TemporalBinning/RenamedIsolates::g' | sed -e 's:.fa::g'", shell = True)
+ISOLATES = [m.decode('utf-8') for m in ISOLATES.split()]
+
+## Define output directory
+OUTDIR = os.environ.get("OUTDIR", "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS/Databases")
+
+workdir:
+    OUTDIR
+
+include:
+    '../rules/Databases/renameContigs.rule'
+
+include:
+    '../rules/Databases/renameGff_contigs.rule'
+
+include:
+    '../rules/Databases/renameFaa.rule'
+
+include:
+    '../rules/Databases/get_bin_annotations.rule'
+
+include:
+    '../rules/Databases/get_isolate_annotations.rule'
+
+include:
+    '../rules/Databases/get_isolate_protein_seqs.rule'
+
+rule PROTEIN_DB:
+  input:
+        expand("Protein_DBS/per_bin_faas/{ts_sample}/per_bin_faas.done", ts_sample=TS_SAMPLES),
+        expand("Protein_DBS/per_sample_unbinned_faas/{ts_sample}.unbinned.faa", ts_sample=TS_SAMPLES),
+        expand("Protein_DBS/per_sample_binned_faas/{ts_sample}.binned.faa", ts_sample=TS_SAMPLES),
+        expand("Protein_DBS/per_sample_faas/{ts_sample}.faa", ts_sample=TS_SAMPLES),
+        expand("{ts_dir}/{ts_sample}/Assembly/mgmt.assembly.merged.fa", ts_dir=TS_DIR, ts_sample=TS_SAMPLES),
+        expand("Annotations/Bins/{bin}.gff", bin=BINS),
+        expand("Annotations/Isolates/{isolate}.gff", isolate=ISOLATES),
+        expand("Protein_DBS/Isolates/{isolate}_proteins.faa", isolate=ISOLATES),
+        "Assemblies/ALL-mgmt.assembly.merged.fa",
+        "Annotations/ALL-mgmt.assembly.merged.gff"
+  output:
+        "database.done"
+  shell:
+        "touch {output}"
+

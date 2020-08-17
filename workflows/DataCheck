@@ -1,0 +1,72 @@
+import subprocess
+
+PWD = os.getcwd()
+
+INPUTDIR = os.environ.get("INPUTDIR")
+OUTPUTDIR = os.environ.get("OUTPUTDIR")
+TMPDIR = os.environ.get("TMPDIR", "/tmp")
+SAMPLE = os.environ.get("SAMPLE")
+SRCDIR = os.environ.get("SRCDIR", "%s/src" % PWD)
+CONFIG = os.environ.get("CONFIG", "conf/config_bigmem183.json")
+DBPATH = os.environ.get("DBPATH", "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db")
+
+## Define configurations
+configfile: CONFIG
+
+MEMCORE = os.environ.get("MEMCORE", config['memory_per_core_gb'])
+THREADS = os.environ.get("THREADS", config['threads'])
+MEMTOTAL = os.environ.get("MEMTOTAL", config['memory_total_gb'])
+
+## Define input directories
+TS_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS"
+
+## Define samples
+TS_SAMPLES = ['A01', 'A02', 'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12', 'D13', 'D14', 'D15', 'D16', 'D17', 'D18', 'D19', 'D20', 'D21', 'D22', 'D23', 'D24', 'D25', 'D26', 'D27', 'D28', 'D29', 'D30', 'D31', 'D32', 'D33', 'D34', 'D35', 'D36', 'D37', 'D38', 'D39', 'D40', 'D41', 'D42', 'D43', 'D44', 'D45', 'D46', 'D47', 'D48', 'D49', 'D50', 'D51', 'D06_2',  'D07_2','D14_2', 'D28_2', 'D39_2', 'D45_2', 'D49_2' ]
+
+## Define types of reads (MG/MT)
+TYPES = [ "mg", "mt" ]
+
+## Define output directory
+OUTDIR = os.environ.get("OUTDIR", "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS/DataCheck")
+
+workdir:
+    OUTDIR
+
+include:
+    '../rules/DataCheck/run_nonpareil.rule'
+
+include:
+    '../rules/DataCheck/run_nonpareil_mgmt.rule'
+
+include:
+    '../rules/DataCheck/mOTU_analysis.rule'
+
+include:
+    '../rules/DataCheck/generate_plots.rule'
+
+# master command
+rule POPULATION_ANALYSIS:
+    input:
+        expand("Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npo", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npc", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npl", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_{type}_nonpareil.npa", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npo", ts_sample = TS_SAMPLES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npc", ts_sample = TS_SAMPLES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npl", ts_sample = TS_SAMPLES),
+        expand("Nonpareil/{ts_sample}/{ts_sample}_mgmt_nonpareil.npa", ts_sample = TS_SAMPLES),
+        expand("mOTU/{ts_sample}/{type}/", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("mOTU/{ts_sample}/{type}/annotated.mOTU.abundances.gz",  ts_sample = TS_SAMPLES, type = TYPES),
+        expand("mOTU/{ts_sample}/{type}/mOTU.abundances.gz", ts_sample = TS_SAMPLES, type = TYPES),
+        expand("mOTU/{ts_sample}/{type}/NCBI.species.abundances.gz", ts_sample = TS_SAMPLES, type = TYPES)
+    output:
+        expand("Nonpareil/DoneFiles/{ts_sample}.done", ts_sample = TS_SAMPLES),
+        expand("mOTU/DoneFiles/{ts_sample}.done", ts_sample = TS_SAMPLES),
+    shell:
+        """
+        mkdir -p Nonpareil/DoneFiles
+        touch {output[0]}
+
+        mkdir -p mOTU/DoneFiles
+        touch {output[1]}
+        """

@@ -1,0 +1,11 @@
+rule pool_annotations:
+    input:
+        expand("{databases}/Annotations/Bins/{bin}.gff", databases=DATABASES, bin=BINS),
+        expand("{databases}/Annotations/Isolates/{isolate}.gff", databases=DATABASES, isolate=ISOLATES)
+    output:
+        "Index/ALL_representative_genomes.gff"
+    shell:
+        """
+        mkdir -p Index
+        cat {input} > {output}
+        """

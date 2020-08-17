@@ -1,0 +1,19 @@
+rule get_genome_length_bin:
+    input:
+       "%s/{bin}.fa" % BINS_DIR
+    output:
+       "Calculations/PopulationLevel/Bins/{bin}_length.txt"
+    shell:
+        """
+        {SRCDIR}/get_fasta_length.pl {input} > {output}
+        """
+
+rule get_genome_length_isolate:
+    input:
+       "%s/{isolate}.fa" % ISOLATES_DIR
+    output:
+       "Calculations/PopulationLevel/Isolates/{isolate}_length.txt"
+    shell:
+        """
+        {SRCDIR}/get_fasta_length.pl {input} > {output}
+        """

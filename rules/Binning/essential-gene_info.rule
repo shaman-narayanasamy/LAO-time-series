@@ -1,0 +1,15 @@
+rule essential_gene_info:
+    input:
+        expand("{{ts_sample}}/Binning/clusteringWS.{pk}.{nn}.Rdata".split(),pk=config["binning"]["pk"],nn=config["binning"]["nn"]),
+        "{ts_sample}/Binning/ORFS-contig_links.bed",
+        "{ts_sample}/Binning/ORFS.hmm.orfs.essential.hits_reduced"
+    output:
+        "{ts_sample}/Binning/essMarkerGenes/markersAll.tsv",
+    shell:
+        """
+        mkdir -p {wildcards.ts_sample}/Binning/essMarkerGenes
+
+        ## Run the R script to extract the table
+        Rscript {SRCDIR}/get_essGeneInfo.R {input} {wildcards.ts_sample}
+        """
+ 

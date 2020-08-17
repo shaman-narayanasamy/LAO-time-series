@@ -1,0 +1,16 @@
+rule get_bin_annotations:
+    input:
+        "%s/{bin}.fa" % BINS_DIR
+    output:
+        'Annotations/Bins/{bin}.gff'
+    shell:
+       """
+       mkdir -p Annotations/Bins
+
+       SAMPLE=$(echo {wildcards.bin} | cut -f1 -d "_")
+       BIN=$(echo {wildcards.bin} | cut -f2 -d "_" | sed -e "s/.fa//g")
+       
+       cat {TS_DIR}/${{SAMPLE}}/Binning/clusterFiles/${{BIN}}/cluster.${{BIN}}.gff | \
+       sed -e "s/^contig/{wildcards.bin}_contig/g" | sed -e "s/ID=PROKKA/ID={wildcards.bin}_PROKKA/g" > \
+       {output}
+       """

@@ -1,0 +1,6 @@
+rule generate_plots:
+    input:
+    output:
+    shell:
+        """
+        """

@@ -1,0 +1,66 @@
+import subprocess
+
+PWD = os.getcwd()
+
+INPUTDIR = os.environ.get("INPUTDIR")
+OUTPUTDIR = os.environ.get("OUTPUTDIR")
+TMPDIR = os.environ.get("TMPDIR", "/tmp")
+SAMPLE = os.environ.get("SAMPLE")
+SRCDIR = os.environ.get("SRCDIR", "%s/src" % PWD)
+CONFIG = os.environ.get("CONFIG", "conf/config_bigmem183.json")
+DBPATH = os.environ.get("DBPATH", "/mnt/nfs/projects/ecosystem_biology/local_tools/IMP/dependencies/prokka/db")
+
+## Define configurations
+configfile: CONFIG
+
+MEMCORE = os.environ.get("MEMCORE", config['memory_per_core_gb'])
+THREADS = os.environ.get("THREADS", config['threads'])
+MEMTOTAL = os.environ.get("MEMTOTAL", config['memory_total_gb'])
+
+## Define input directories
+TS_DIR = "/scratch/users/snarayanasamy/LAO_TS_IMP-v1.3"
+GENOMES_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/Genomes"
+DATABASE_DIR = "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS/Databases"
+
+## Define samples
+TS_SAMPLES = ['A01', 'A02', 'D32', 'D36', 'D49']
+
+## Define Isolate genomes
+GENOMES = subprocess.check_output("ls /mnt/nfs/projects/ecosystem_biology/LAO/Genomes | grep '^Isolate_'", shell = True)
+GENOMES = [m.decode('utf-8') for m in GENOMES.split()]
+
+## Define output directory
+REF_OUTDIR = os.environ.get("REF_OUTDIR", "/mnt/nfs/projects/ecosystem_biology/LAO/time_series/IMP_analysis/LAO_TS/TemporalBinning")
+
+workdir:
+    REF_OUTDIR
+
+include:
+    '../rules/TemporalBinning/rename_bins.rule'
+
+include:
+    '../rules/TemporalBinning/run_drep.rule'
+
+include:
+    '../rules/TemporalBinning/rename_isolates.rule'
+
+include:
+    '../rules/TemporalBinning/renamed_isolates_and_bins.rule'
+
+include:
+    '../rules/TemporalBinning/get_protein_sequences.rule'
+
+rule TEMPORAL_BINNING:
+  input:
+        "dRep.done",
+        "bin_renaming.done",
+        expand("AllBins/{genome}.fa", genome=GENOMES),
+        "isolate_renaming.done",
+        "FinalRepresentatives.done",
+        "FinalRepresentatives/ProteinDatabases/FinalRepresentatives_protein_DB.done",
+        "FinalRepresentatives/ProteinDatabases/FinalRepresentatives_protein_DB.faa"
+  output:
+        "temporal_binning.done"
+  shell:
+        "touch {output}"
+

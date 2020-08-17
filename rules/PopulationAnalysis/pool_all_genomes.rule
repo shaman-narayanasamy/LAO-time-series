@@ -1,0 +1,11 @@
+rule pool_genomes:
+    input:
+        expand("{bins_dir}/{bin}.fa", bins_dir=BINS_DIR, bin=BINS),
+        expand("{isolates_dir}/{isolate}.fa", isolates_dir=ISOLATES_DIR, isolate=ISOLATES)
+    output:
+        "Index/ALL_representative_genomes.fa"
+    shell:
+        """
+        mkdir -p Index
+        cat {input} > {output}
+        """

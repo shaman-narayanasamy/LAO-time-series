@@ -1,0 +1,22 @@
+rule get_bin_proteins:
+    input:
+        "%s/{ts_sample}/Analysis/annotation/prokka.faa" % TS_DIR
+    output:
+        "%s/{ts_sample}/Binning/unbinned_proteins.faa" % TS_DIR
+   shell:
+        """
+        for BIN in `ls -d {TS_DIR}/{wildcards.ts_sample}/Binning/clusterFiles/* | cut -f9 -d "/"`
+        do
+            TP=`echo {wildcards.ts_sample} | cut -f1 -d "_"`
+            sed -e 's/contig/${{TS}}_${{BIN}}_contig/g' \
+            {TS_DIR}/{wildcards.ts_sample}/Binning/clusterFiles/${{BIN}}/cluster.${{BIN}}.gff > \
+            {TS_DIR}/{wildcards.ts_sample}/Binning/clusterFiles/${{BIN}}/cluster.${{BIN}}_renamed.gff 
+
+            sed -e 's/contig/${{TS}}_${{BIN}}_contig/g' \
+            {TS_DIR}/{wildcards.ts_sample}/Binning/clusterFiles/${{BIN}}/cluster.${{BIN}}.faa > \
+            {TS_DIR}/{wildcards.ts_sample}/Binning/clusterFiles/${{BIN}}/cluster.${{BIN}}_renamed.faa 
+        done
+        grep "^>" {input} | \
+        cut -d "_" -f 3,4 | \
+        cut -d " " -f1 | pullseq -N -v -e -i {input} > {output}        
+        """

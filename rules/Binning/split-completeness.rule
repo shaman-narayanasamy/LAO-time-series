@@ -1,0 +1,14 @@
+rule binning_split_completeness:
+    input:
+        "{ts_sample}/Binning/ORFS.hmm.orfs.essential.hits"
+    output:
+        "{ts_sample}/Binning/split_completeness.done"
+    shell:
+        """
+        for IDFILE in $(find {wildcards.ts_sample}/Binning/clusterFiles -name "*.protids" -maxdepth 1 | sort)
+        do
+            OUTFILE="{wildcards.ts_sample}/Binning/clusterFiles/$(basename "${{IDFILE}}" .protids).essential.hits"
+            awk 'FNR==NR{{a[$1]=$1;next}}{{if(a[$1]) print $0}}' $IDFILE {input[0]} | uniq > $OUTFILE
+        done
+        touch {output}
+        """
